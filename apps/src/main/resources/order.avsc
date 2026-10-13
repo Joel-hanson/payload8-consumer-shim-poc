@@ -1,0 +1,4 @@
+{"type":"record","name":"Order","namespace":"io.ibm.migration",
+ "fields":[{"name":"orderId","type":"string"},
+           {"name":"customer","type":"string"},
+           {"name":"amount","type":"double"}]}
