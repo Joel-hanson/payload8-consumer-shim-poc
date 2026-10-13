@@ -26,7 +26,7 @@ import java.util.TreeMap;
 /**
  * Per-record byte-level verification of the Confluent-side payloads.
  *
- * <p>Source records (Apicurio 2.x serde, default config — payload mode):
+ * <p>Source records (Apicurio 2.x serde, {@code ENABLE_HEADERS=false}, DefaultIdHandler):
  * <pre>
  *   byte[0]    = 0x00  (magic byte)
  *   byte[1..8] = schema ID as an 8-byte big-endian long  (DefaultIdHandler)

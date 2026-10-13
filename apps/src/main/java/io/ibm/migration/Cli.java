@@ -9,10 +9,10 @@ import io.ibm.migration.verify.PayloadIdVerifier;
  * CLI entry point.
  *
  * <pre>
- *   java -jar apps.jar produce [count]       Produce with Apicurio v2 serde defaults
- *   java -jar apps.jar consume-cflt-shim     Consume with ApicurioHeaderShimDeserializer
- *   java -jar apps.jar mirror-topic          Copy topic src→dest preserving headers (Cluster Linking stand-in)
- *   java -jar apps.jar verify-ids            Pre-condition check: header present, ID resolves, payload intact
+ *   java -jar apps.jar produce [count]    Produce 8-byte-payload Avro (ENABLE_HEADERS=false)
+ *   java -jar apps.jar consume-cflt-shim  Consume with ApicurioPayloadDeserializer
+ *   java -jar apps.jar mirror-topic       Byte-for-byte copy source→dest (Cluster Linking stand-in)
+ *   java -jar apps.jar verify-ids         Check framing + ID resolution on dest
  * </pre>
  */
 public final class Cli {
@@ -40,15 +40,10 @@ public final class Cli {
     private static void usage() {
         System.err.println("""
                 Usage:
-                  produce [count]       Produce with Apicurio v2 serde default config
-                                        (ENABLE_HEADERS=true, USE_ID=globalId — serde built-in defaults)
-                  consume-cflt-shim     Consume from Confluent using ApicurioHeaderShimDeserializer
-                                        (reads globalId header, prepends Confluent prefix)
-                  mirror-topic          Copy source topic to dest preserving headers byte-for-byte
-                                        (stand-in for Cluster Linking; set KAFKA_TOPIC, SOURCE_BOOTSTRAP,
-                                        DEST_BOOTSTRAP)
-                  verify-ids            Pre-condition check: globalId header present on dest, ID resolves
-                                        in Confluent SR, payload bytes unchanged
+                  produce [count]       Produce with ENABLE_HEADERS=false (8-byte payload ID)
+                  consume-cflt-shim     Consume with ApicurioPayloadDeserializer
+                  mirror-topic          Copy source→dest byte-for-byte (Cluster Linking stand-in)
+                  verify-ids            Check 8-byte framing, dest==source, ID resolves in Confluent
                 """);
     }
 }

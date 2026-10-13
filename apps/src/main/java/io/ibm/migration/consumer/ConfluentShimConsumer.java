@@ -13,20 +13,13 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Post-migration consumer for Apicurio 2.x default-config header-mode records after Cluster Linking.
+ * Post-migration consumer for Apicurio 2.x 8-byte payload records after Cluster Linking.
  *
- * <p>Uses {@link ApicurioHeaderShimDeserializer} as the value deserializer.  The shim reads the
- * {@code apicurio.value.globalId} header (written by the Apicurio 2.x serde with default settings),
- * prepends the Confluent 5-byte wire-format prefix ({@code 0x00} + 4-byte int schema ID), and
- * delegates to {@code KafkaAvroDeserializer} for actual deserialization.
+ * <p>Uses {@link ApicurioPayloadDeserializer}, which reframes {@code 0x00 + 8-byte id} to
+ * Confluent {@code 0x00 + 4-byte id} and then delegates to {@code KafkaAvroDeserializer}.
  *
- * <p>Env vars:
- * <ul>
- *   <li>{@code DEST_BOOTSTRAP}      — Confluent-side bootstrap (default {@code localhost:29094})</li>
- *   <li>{@code SCHEMA_REGISTRY_URL} — Confluent Schema Registry URL (default {@code http://localhost:8082})</li>
- *   <li>{@code DEST_TOPIC}          — topic to consume (default {@code orders})</li>
- *   <li>{@code CONSUMER_GROUP}      — consumer group ID (default {@code cflt-shim-consumer})</li>
- * </ul>
+ * <p>Env vars: {@code DEST_BOOTSTRAP}, {@code SCHEMA_REGISTRY_URL}, {@code DEST_TOPIC},
+ * {@code CONSUMER_GROUP}.
  */
 public final class ConfluentShimConsumer {
 
@@ -42,7 +35,6 @@ public final class ConfluentShimConsumer {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,        "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,       "true");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,   StringDeserializer.class.getName());
-        // Shim: detects 8-byte Apicurio payload prefix → reframes to Confluent 4-byte prefix.
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ApicurioPayloadDeserializer.class.getName());
         props.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, registry);
         props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, false);
@@ -50,7 +42,7 @@ public final class ConfluentShimConsumer {
         try (KafkaConsumer<String, GenericRecord> consumer = new KafkaConsumer<>(props)) {
             consumer.subscribe(List.of(topic));
             System.out.printf(
-                    "Listening on dest topic '%s' with ApicurioPayloadDeserializer shim ...%n", topic);
+                    "Listening on dest topic '%s' with ApicurioPayloadDeserializer ...%n", topic);
             long deadline = System.currentTimeMillis() + 45_000;
             int seen = 0;
             while (System.currentTimeMillis() < deadline && seen < 30) {
@@ -64,12 +56,12 @@ public final class ConfluentShimConsumer {
             if (seen == 0) {
                 System.err.printf(
                         "FAILED: no records consumed from topic '%s'. "
-                        + "Check schema IMPORT, topic replication, and DEST_TOPIC env var.%n", topic);
+                        + "Check schema IMPORT, topic replication, and DEST_TOPIC.%n", topic);
                 System.exit(2);
             }
             System.out.printf(
                     "SUCCESS: shim consumer read %d record(s) from '%s' "
-                    + "(8-byte payload prefix reframed to Confluent 4-byte, no SMT needed).%n",
+                    + "(8-byte payload prefix reframed to Confluent 4-byte).%n",
                     seen, topic);
         }
     }

@@ -1,11 +1,8 @@
 # Payload-8-byte consumer shim PoC
 #
-# Stack: Source Kafka (ES stand-in) + Apicurio (image swapped v2→v3 by the run script)
-#        Dest Kafka (Confluent stand-in) + Confluent Schema Registry
-#
-# No Connect worker, no SMT — the fix lives entirely in the consumer-side
-# ApicurioPayloadDeserializer shim.  Replication is simulated byte-for-byte
-# (stand-in for Cluster Linking, which is a Confluent enterprise feature).
+# Source Kafka + dest Kafka + Confluent SR.
+# Apicurio is started by scripts/run-demo.sh (image swapped 2.x → 3.x mid-run).
+# No Connect/SMT — fix is ApicurioPayloadDeserializer; copy is byte-for-byte (CL stand-in).
 
 services:
   # ── Source cluster (Event Streams / Apicurio stand-in) ─────────────────────
